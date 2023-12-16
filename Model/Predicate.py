@@ -38,3 +38,6 @@ class Predicate:
 
     def __str__(self) -> str:
         return self.name + "(" + ",".join([ent.name for ent in self.entities]) + ")"
+
+    def __repr__(self) -> str:
+        return str(self)

@@ -11,7 +11,8 @@ class BlockDomain(Domain):
         for i in range(1, self.number_of_blocks + 1):
             block_string = f"Block{i}"
             self.entities.append(Entity(block_string, "Block"))
-        self.entities.append(Entity("Table", "Table"))
+        self.table = Entity("Table", "Table")
+        self.entities.append(self.table)
 
     @Domain.schema
     def move_action(self, b, x, y):
@@ -34,15 +35,14 @@ class BlockDomain(Domain):
         )
 
     @Domain.schema
-    def move_to_table(b, x):
+    def move_to_table(self, b, x):
         if b.type == "Table" or x.type == "Table":
             return None
-        table = Entity("Table", "Table")
         move_action_name = f"MoveToTable({b.name},{x.name})"
         on_b_x = Predicate("On", [b, x])
         clear_block_b = Predicate("Clear", [b])
 
-        on_b_table = Predicate("On", [b, table])
+        on_b_table = Predicate("On", [b, self.table])
         clear_x = Predicate("Clear", [x])
 
         return Action(

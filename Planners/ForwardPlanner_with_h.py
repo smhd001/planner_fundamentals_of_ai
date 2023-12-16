@@ -1,4 +1,5 @@
 from queue import Queue
+from queue import PriorityQueue
 from Planners.Planner import Planner
 from Model.State import State
 
@@ -17,7 +18,7 @@ class ForwardPlanner(Planner):
         super().__init__(problem)
 
     def search(self):
-        frontier = Queue()
+        frontier = PriorityQueue()
         visited = set()
         goal = self.problem.goal_state
 
@@ -26,10 +27,10 @@ class ForwardPlanner(Planner):
             return []
 
         # Add initial state to frontier and visited set
-        frontier.put(self.problem.initial_state)
+        frontier.put((0, self.problem.initial_state))
         visited.add(self.problem.initial_state)
         while not frontier.empty():
-            current_state = frontier.get()
+            current_state = frontier.get()[1]
 
             # Generate successor states
             successor_states = self.successor(current_state)
@@ -41,17 +42,41 @@ class ForwardPlanner(Planner):
 
                 # Add successor state to frontier and visited set
                 if successor_state not in visited:
-                    frontier.put(successor_state)
+                    h = self.idl_heuristic(successor_state)
+                    print(h)
+                    frontier.put((h, successor_state))
                     visited.add(successor_state)
 
         return []
 
-    def successor(self, current_state) -> State:
+    def successor(self, current_state):
         result = []
         for action in self.problem.domain.actions:
             # Check if action is applicable to state
             if action.is_applicable(current_state):
                 new_state = action.progress(current_state)
+                # Set parent state and action
+                new_state.parent = current_state
+                result.append(new_state)
+
+        return result
+
+    def idl_heuristic(self, state) -> int:
+        return 10000
+
+    def get_result_len(self, successor_state, state):
+        sum = 0
+        while successor_state != state:
+            sum += 1
+            successor_state = successor_state.parent
+        return sum
+
+    def idl_successor(self, current_state):
+        result = []
+        for action in self.problem.domain.actions:
+            # Check if action is applicable to state
+            if action.is_applicable(current_state):
+                new_state = action.progress_without_delete(current_state)
                 # Set parent state and action
                 new_state.parent = current_state
                 result.append(new_state)

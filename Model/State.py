@@ -5,8 +5,8 @@ class State:
     def __init__(
         self,
         action_name: str,
-        positive_literals: list[Predicate] | set[Predicate],
-        negative_literals: list[Predicate] | set[Predicate],
+        positive_literals: list[Predicate],
+        negative_literals: list[Predicate],
     ):
         # Initialize a State object
         self.action_name = action_name  # Set the name of the action
@@ -18,10 +18,14 @@ class State:
         )  # Convert negative_literals to a set
         self.parent = None
 
-    def entails_from(self, other):
-        """check if this entails from other state"""
-        is_all_positive = self.positive_literals.issubset(other.positive_literals)
-        is_none_negative = self.negative_literals.isdisjoint(other.positive_literals)
+    def goal_test(self, goal):
+        is_all_positive = goal.positive_literals.issubset(self.positive_literals)
+        is_none_negative = goal.negative_literals.isdisjoint(self.positive_literals)
+        return is_all_positive and is_none_negative
+
+    def initial_test(self, initial):
+        is_all_positive = self.positive_literals.issubset(initial.positive_literals)
+        is_none_negative = self.negative_literals.isdisjoint(initial.positive_literals)
         return is_all_positive and is_none_negative
 
     def build_solution(self) -> list:
@@ -39,6 +43,9 @@ class State:
             self.positive_literals == other.positive_literals
             and self.negative_literals == other.negative_literals
         )
+
+    def __lt__(self, other):
+        return self.action_name < other.action_name
 
     def __hash__(self) -> int:
         # Compute the hash value of the State object
@@ -71,3 +78,6 @@ class State:
             )
             + "\n"
         )
+
+    def __repr__(self) -> str:
+        return str(self)

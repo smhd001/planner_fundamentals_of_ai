@@ -11,7 +11,7 @@ class PostInitMeta(type):
 
 
 class Domain(metaclass=PostInitMeta):
-    action_schemas = []
+    action_schemas = {}
 
     def __init__(self, name: str):
         # Initializes a new instance of the Domain class with a given name
@@ -30,19 +30,23 @@ class Domain(metaclass=PostInitMeta):
                     f"all entities should be type of Entity not {type(ent)}"
                 )
         # define actions
-        for sc in self.action_schemas:
+        for sc in self.action_schemas[self.__class__.__name__]:
             sig = signature(sc)
-            for comb in permutations(self.entities, len(sig.parameters)):
-                action = sc(*comb)
+            first = True
+            for comb in permutations(self.entities, len(sig.parameters) - 1):
+                action = sc(self, *comb)
                 if action:
                     self.actions.append(action)
-        # print("entities defiend are",self.entities)
-        # print("action defiend are")
-        # for a in self.actions:
-        #     print(a,end=' ')
+                    if first:
+                        # print(action)
+                        first = False
+        # for ac in self.actions:
+        #     print(ac)
+        #     print()
+        self.actions = list(set(self.actions))
 
     @classmethod
     def schema(cls, func):
-        """this is a decorator to define schemas"""
-        cls.action_schemas.append(func)
+        subclass = func.__qualname__.split(".")[0]
+        cls.action_schemas.setdefault(subclass, []).append(func)
         return func
